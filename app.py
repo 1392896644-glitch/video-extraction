@@ -21,10 +21,10 @@ logger = logging.getLogger(__name__)
 # 初始化对象存储
 storage = S3SyncStorage(
     endpoint_url=os.getenv("COZE_BUCKET_ENDPOINT_URL"),
-    access_key="",
-    secret_key="",
+    access_key=os.getenv("AWS_ACCESS_KEY_ID"),
+    secret_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
     bucket_name=os.getenv("COZE_BUCKET_NAME"),
-    region="cn-beijing",
+    region=os.getenv("COZE_BUCKET_REGION", "cn-beijing"),
 )
 
 # 创建Flask应用
