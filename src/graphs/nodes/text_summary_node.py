@@ -39,7 +39,8 @@ def text_summary_node(
     ctx = runtime.context
     
     # 读取大模型配置
-    cfg_file = os.path.join(os.getenv("COZE_WORKSPACE_PATH"), config['metadata']['llm_cfg'])
+    workspace_path = os.getenv("COZE_WORKSPACE_PATH", os.getcwd())
+    cfg_file = os.path.join(workspace_path, config['metadata']['llm_cfg'])
     with open(cfg_file, 'r', encoding='utf-8') as fd:
         _cfg = json.load(fd)
     
