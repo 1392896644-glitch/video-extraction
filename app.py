@@ -9,8 +9,6 @@ import logging
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 sys.path.insert(0, os.path.dirname(__file__))
 
-from langgraph.runtime import Runtime
-from coze_coding_utils.runtime_ctx.context import Context
 from graphs.graph import main_graph
 from graphs.state import GraphInput
 from utils.file.file import File
@@ -86,23 +84,19 @@ def run_workflow(video_path):
     try:
         # 构建输入
         abs_path = os.path.abspath(video_path)
-        
+
         # 创建File对象
         video_file = File(url=f"file://{abs_path}", file_type="video")
-        
+
         # 构建输入数据
         input_data = GraphInput(video_file=video_file)
-        
-        # 创建上下文
-        context = Context()
-        
-        # 调用工作流
-        runtime = Runtime(context)
-        result = main_graph.invoke(input_data, config={}, runtime=runtime)
-        
+
+        # 调用工作流（不需要手动创建Runtime和Context）
+        result = main_graph.invoke(input_data, config={})
+
         # 只返回飞书URL
         return result
-        
+
     except Exception as e:
         logger.error(f"工作流执行失败: {str(e)}", exc_info=True)
         raise
