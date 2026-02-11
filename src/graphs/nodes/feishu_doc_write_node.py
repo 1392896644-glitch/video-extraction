@@ -119,6 +119,7 @@ def feishu_doc_write_node(
             base_result = bitable.create_base(name="VideoTextExtractionWorkflow")
             app_token = base_result["data"]["app"]["app_token"]
             logger.info(f"创建新的飞书Base: {app_token}")
+            logger.info(f"Base详细信息: {base_result}")
         
         # 确定或创建 Table
         if state.feishu_table_id:
@@ -197,6 +198,7 @@ def feishu_doc_write_node(
         record_id = add_result["data"]["records"][0]["record_id"]
         
         # 生成飞书多维表格访问链接
+        # 飞书Base的正确URL格式
         feishu_url = f"https://feishu.cn/base/{app_token}"
         
         logger.info(f"成功写入飞书文档，记录ID: {record_id}")
