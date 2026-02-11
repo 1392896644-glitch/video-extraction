@@ -4,6 +4,7 @@ import os
 import sys
 import json
 import logging
+from coze_coding_dev_sdk.s3 import S3SyncStorage
 
 # 添加src目录到Python路径（兼容Render部署环境）
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
@@ -16,6 +17,15 @@ from utils.file.file import File
 # 配置日志
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# 初始化对象存储
+storage = S3SyncStorage(
+    endpoint_url=os.getenv("COZE_BUCKET_ENDPOINT_URL"),
+    access_key="",
+    secret_key="",
+    bucket_name=os.getenv("COZE_BUCKET_NAME"),
+    region="cn-beijing",
+)
 
 # 创建Flask应用
 app = Flask(__name__)
@@ -56,16 +66,29 @@ def upload_video():
         if not allowed_file(file.filename):
             return jsonify({'success': False, 'error': '不支持的文件格式，请上传 mp4, mov, avi, flv, webm 或 mkv 格式的视频'}), 400
         
-        # 保存文件
+        # 保存文件到临时目录
         filename = secure_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
         
-        logger.info(f"视频文件已保存: {filepath}")
+        logger.info(f"视频文件已保存到临时目录: {filepath}")
+        
+        # 上传到对象存储
+        logger.info("正在上传视频到对象存储...")
+        file_key = storage.stream_upload_file(
+            fileobj=open(filepath, 'rb'),
+            file_name=filename,
+            content_type=f"video/{filename.rsplit('.', 1)[1].lower()}"
+        )
+        logger.info(f"视频已上传到对象存储，key: {file_key}")
+        
+        # 生成签名 URL（有效期 1 小时）
+        video_url = storage.generate_presigned_url(key=file_key, expire_time=3600)
+        logger.info(f"视频签名 URL: {video_url}")
         
         # 调用工作流
         logger.info("开始调用工作流...")
-        result = run_workflow(filepath)
+        result = run_workflow(video_url)
         
         logger.info("工作流执行完成")
         
@@ -79,14 +102,13 @@ def upload_video():
         logger.error(f"处理失败: {str(e)}", exc_info=True)
         return jsonify({'success': False, 'error': str(e)}), 500
 
-def run_workflow(video_path):
+def run_workflow(video_url):
     """运行工作流"""
     try:
-        # 构建输入
-        abs_path = os.path.abspath(video_path)
+        logger.info(f"使用视频 URL 调用工作流: {video_url}")
 
-        # 创建File对象
-        video_file = File(url=f"file://{abs_path}", file_type="video")
+        # 创建File对象（使用对象存储的 URL）
+        video_file = File(url=video_url, file_type="video")
 
         # 构建输入数据
         input_data = GraphInput(video_file=video_file)
