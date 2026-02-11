@@ -154,4 +154,3 @@ xxhash==3.6.0
 yarl==1.22.0
 yt-dlp==2026.2.4
 zstandard==0.25.0
-gunicorn>=23.0.0
