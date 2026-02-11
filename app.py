@@ -18,14 +18,13 @@ from utils.file.file import File
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# 初始化对象存储（使用 Coze Workload Identity）
+# 初始化对象存储（使用 Coze S3 代理）
 storage = S3SyncStorage(
-    endpoint_url=os.getenv("COZE_BUCKET_ENDPOINT_URL", "https://integration.coze.cn/coze-coding-s3proxy/v1"),
-    access_key=os.getenv("AWS_ACCESS_KEY_ID", ""),
-    secret_key=os.getenv("AWS_SECRET_ACCESS_KEY", ""),
+    endpoint_url=os.getenv("COZE_BUCKET_ENDPOINT_URL"),
+    access_key="",
+    secret_key="",
     bucket_name=os.getenv("COZE_BUCKET_NAME"),
-    region=os.getenv("COZE_BUCKET_REGION", "cn-beijing"),
-    api_key=os.getenv("COZE_WORKLOAD_IDENTITY_API_KEY"),
+    region="cn-beijing",
 )
 
 # 创建Flask应用
