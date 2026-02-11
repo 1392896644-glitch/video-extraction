@@ -1,0 +1,26 @@
+version: "1"
+build:
+  os: "ubuntu-22.04"
+  tools:
+    python: "3.12.9"
+
+services:
+  - type: web
+    name: video-extraction
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn -w 4 -b 0.0.0.0:$PORT app:app"
+    envVars:
+      - key: PYTHONPATH
+        value: "/opt/render/project/src"
+      - key: PORT
+        value: "5000"
+
+healthCheckPath: "/health"
+
+# 说明：
+# 1. 将代码推送到GitHub
+# 2. 在render.com连接GitHub仓库
+# 3. 使用这个配置文件部署
+# 4. Render会自动分配公网URL

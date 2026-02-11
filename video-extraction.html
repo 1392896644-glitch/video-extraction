@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频文案提取系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 50px 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 550px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 40px;
+        }
+
+        h1 .emoji {
+            font-size: 40px;
+        }
+
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .step h3 {
+            color: #667eea;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .step p {
+            color: #555;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .step code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .copy-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .copy-box p {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .copy-box textarea {
+            width: 100%;
+            height: 120px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            resize: vertical;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .info-box p {
+            color: #0c5460;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .emoji {
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><span class="emoji">🎬</span> 视频文案提取系统</h1>
+
+        <div class="step">
+            <h3>📌 使用方法</h3>
+            <p>本系统通过命令行运行，请按照以下步骤操作：</p>
+        </div>
+
+        <div class="step">
+            <h3>步骤 1：启动服务</h3>
+            <p>在项目目录下运行：</p>
+            <p><code>python3 app.py</code></p>
+        </div>
+
+        <div class="step">
+            <h3>步骤 2：访问网页</h3>
+            <p>打开浏览器，访问：<strong>http://localhost:5000</strong></p>
+        </div>
+
+        <div class="step">
+            <h3>步骤 3：上传视频</h3>
+            <p>在网页中点击或拖拽上传视频文件，支持格式：MP4、MOV、AVI、FLV、WEBM、MKV</p>
+        </div>
+
+        <div class="step">
+            <h3>步骤 4：获取飞书链接</h3>
+            <p>处理完成后，网页会显示飞书表格链接，点击即可查看完整的文案分析结果</p>
+        </div>
+
+        <div class="info-box">
+            <p><strong>💡 如果网页打不开，请检查：</strong></p>
+            <p>• 确保已安装 Flask：<code>pip install Flask</code></p>
+            <p>• 确保 5000 端口没有被占用</p>
+            <p>• 确保命令行窗口没有报错</p>
+        </div>
+
+        <div class="copy-box">
+            <p><strong>📋 命令参考：</strong></p>
+            <textarea readonly>
+# 1. 进入项目目录
+cd /workspace/projects
+
+# 2. 启动服务
+python3 app.py
+
+# 3. 在浏览器中访问
+http://localhost:5000
+            </textarea>
+        </div>
+
+        <button class="button" onclick="window.open('http://localhost:5000', '_blank')">
+            🚀 打开视频文案提取系统
+        </button>
+    </div>
+</body>
+</html>

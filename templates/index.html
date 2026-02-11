@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频文案提取</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: #666;
+        }
+
+        .upload-area.drag-over {
+            border-color: #4CAF50;
+            background-color: #f9f9f9;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            color: #999;
+            font-size: 12px;
+        }
+
+        #videoFile {
+            display: none;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .btn:hover {
+            background: #45a049;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .progress {
+            display: none;
+            width: 100%;
+            height: 30px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .result {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .result h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .result a {
+            display: block;
+            padding: 15px;
+            background: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .result a:hover {
+            background: #0b7dda;
+        }
+
+        .error {
+            display: none;
+            color: #f44336;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .file-info {
+            display: none;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .file-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .file-size {
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 视频文案提取</h1>
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📹</div>
+            <div class="upload-text">点击或拖拽视频到此处上传</div>
+            <div class="upload-hint">支持 MP4、MOV、AVI、FLV、WEBM、MKV 格式（最大500MB）</div>
+        </div>
+        
+        <input type="file" id="videoFile" accept="video/*">
+        
+        <div class="file-info" id="fileInfo">
+            <div class="file-name" id="fileName"></div>
+            <div class="file-size" id="fileSize"></div>
+        </div>
+        
+        <button class="btn" id="uploadBtn" disabled>开始分析</button>
+        
+        <div class="progress" id="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <div class="progress-text" id="progressText"></div>
+        
+        <div class="error" id="error"></div>
+        
+        <div class="result" id="result">
+            <h3>✅ 处理完成</h3>
+            <p>文案已提取并保存到飞书多维表格</p>
+            <a href="#" id="feishuLink" target="_blank">🔗 查看飞书表格</a>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const videoFile = document.getElementById('videoFile');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const progress = document.getElementById('progress');
+        const result = document.getElementById('result');
+        const error = document.getElementById('error');
+        const feishuLink = document.getElementById('feishuLink');
+
+        // 点击上传
+        uploadArea.addEventListener('click', () => {
+            videoFile.click();
+        });
+
+        // 文件选择
+        videoFile.addEventListener('change', handleFileSelect);
+
+        // 拖拽上传
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                videoFile.files = files;
+                handleFileSelect();
+            }
+        });
+
+        function handleFileSelect() {
+            const file = videoFile.files[0];
+            if (!file) return;
+
+            // 显示文件信息
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            uploadArea.style.display = 'none';
+            fileInfo.style.display = 'block';
+            uploadBtn.disabled = false;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // 上传按钮
+        uploadBtn.addEventListener('click', async () => {
+            const file = videoFile.files[0];
+            if (!file) return;
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = '处理中...';
+            progress.style.display = 'block';
+            progressText.style.display = 'block';
+            result.style.display = 'none';
+            error.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('video', file);
+
+            try {
+                // 模拟进度
+                simulateProgress();
+
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result_data = await response.json();
+
+                if (result_data.success) {
+                    result.style.display = 'block';
+                    feishuLink.href = result_data.feishu_url;
+                } else {
+                    error.textContent = '处理失败：' + result_data.error;
+                    error.style.display = 'block';
+                }
+            } catch (err) {
+                error.textContent = '处理失败：' + err.message;
+                error.style.display = 'block';
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = '开始分析';
+                setTimeout(() => {
+                    progress.style.display = 'none';
+                    progressText.style.display = 'none';
+                }, 500);
+            }
+        });
+
+        function simulateProgress() {
+            let progressValue = 0;
+            const steps = [
+                { value: 20, text: '提取视频中...' },
+                { value: 40, text: '分析文案中...' },
+                { value: 60, text: '生成改写中...' },
+                { value: 80, text: '保存到飞书中...' },
+                { value: 100, text: '完成！' }
+            ];
+
+            let stepIndex = 0;
+
+            const interval = setInterval(() => {
+                if (stepIndex < steps.length) {
+                    progressBar.style.width = steps[stepIndex].value + '%';
+                    progressText.textContent = steps[stepIndex].text;
+                    stepIndex++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 800);
+        }
+    </script>
+</body>
+</html>
