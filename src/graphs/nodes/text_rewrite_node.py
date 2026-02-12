@@ -80,10 +80,19 @@ def text_rewrite_node(
         # 假设大模型返回的是JSON数组格式
         try:
             import re
+            logger.info(f"大模型返回内容: {rewritten_text[:500]}...")
+            
             # 尝试提取JSON数组格式
-            json_match = re.search(r'\[.*?\]', rewritten_text, re.DOTALL)
+            json_match = re.search(r'\[.*\]', rewritten_text, re.DOTALL)
             if json_match:
-                rewritten_texts = json.loads(json_match.group())
+                json_str = json_match.group()
+                logger.info(f"提取到的JSON: {json_str[:200]}...")
+                try:
+                    rewritten_texts = json.loads(json_str)
+                except json.JSONDecodeError as json_error:
+                    logger.warning(f"JSON解析失败: {json_error}，尝试使用正则提取文案")
+                    # 如果JSON解析失败，尝试用其他方法
+                    raise json_error
             else:
                 # 如果不是JSON格式，按行分割
                 lines = [line.strip() for line in rewritten_text.split('\n') if line.strip()]
@@ -102,11 +111,17 @@ def text_rewrite_node(
         except Exception as parse_error:
             logger.warning(f"解析改写文案失败: {parse_error}，使用原始返回")
             # 如果解析失败，简单分割
-            rewritten_texts = rewritten_text.split('\n\n')[:5]
-            if len(rewritten_texts) < 5:
-                # 补充到5条
-                for i in range(len(rewritten_texts), 5):
-                    rewritten_texts.append(f"立时品牌改写文案{i+1}")
+            lines = [line.strip() for line in rewritten_text.split('\n') if line.strip()]
+            rewritten_texts = []
+            for line in lines:
+                clean_line = re.sub(r'^\d+[\.\、]|[改写文案][:：]|改写\d*[:：]', '', line).strip()
+                if clean_line and len(clean_line) > 10:
+                    rewritten_texts.append(clean_line)
+            
+            # 确保有5条文案
+            while len(rewritten_texts) < 5:
+                rewritten_texts.append(f"立时品牌改写文案{len(rewritten_texts)+1}")
+            rewritten_texts = rewritten_texts[:5]
         
         logger.info(f"成功改写文案，生成了 {len(rewritten_texts)} 条文案")
         
