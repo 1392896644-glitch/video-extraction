@@ -92,11 +92,24 @@ def upload_video():
         
         logger.info("工作流执行完成")
         
-        # 只返回飞书URL
-        return jsonify({
-            'success': True,
-            'feishu_url': result.get('feishu_url', '')
-        })
+        # 检查是否有错误
+        if result.get('error'):
+            logger.warning(f"工作流执行有错误: {result.get('error')}")
+        
+        # 返回结果
+        response_data = {
+            'success': not bool(result.get('error')),
+            'feishu_url': result.get('feishu_url', ''),
+            'extracted_text': result.get('extracted_text', ''),
+            'text_summary': result.get('text_summary', ''),
+            'text_analysis': result.get('text_analysis', ''),
+            'rewritten_texts': result.get('rewritten_texts', [])
+        }
+        
+        if result.get('error'):
+            response_data['error'] = result.get('error')
+        
+        return jsonify(response_data)
         
     except Exception as e:
         logger.error(f"处理失败: {str(e)}", exc_info=True)
@@ -116,12 +129,20 @@ def run_workflow(video_url):
         # 调用工作流（不需要手动创建Runtime和Context）
         result = main_graph.invoke(input_data, config={})
 
-        # 只返回飞书URL
-        return result
+        # 转换为字典返回
+        return result.model_dump()
 
     except Exception as e:
         logger.error(f"工作流执行失败: {str(e)}", exc_info=True)
-        raise
+        # 返回错误信息
+        return {
+            'error': str(e),
+            'feishu_url': '',
+            'extracted_text': '',
+            'text_summary': '',
+            'text_analysis': '',
+            'rewritten_texts': []
+        }
 
 @app.route('/health')
 def health():

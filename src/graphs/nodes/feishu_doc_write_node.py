@@ -16,13 +16,26 @@ class FeishuBitable:
         self.client = Client()
         self.base_url = "https://open.larkoffice.com/open-apis"
         self.timeout = 30
-        self.access_token = self.get_access_token()
-        logger.info(f"成功获取飞书access_token: {self.access_token[:20]}..." if self.access_token else "未获取到access_token")
+        try:
+            self.access_token = self.get_access_token()
+            if not self.access_token:
+                logger.error("未能获取飞书 access_token，请检查飞书集成配置")
+            else:
+                logger.info(f"成功获取飞书access_token: {self.access_token[:20]}...")
+        except Exception as e:
+            logger.error(f"获取飞书 access_token 失败: {str(e)}")
+            self.access_token = ""
     
     def get_access_token(self) -> str:
         """获取飞书多维表格的租户访问令牌"""
-        access_token = self.client.get_integration_credential("integration-feishu-base")
-        return access_token
+        try:
+            access_token = self.client.get_integration_credential("integration-feishu-base")
+            if not access_token:
+                logger.error("飞书集成凭证为空，请检查 Coze 平台的飞书集成配置")
+            return access_token or ""
+        except Exception as e:
+            logger.error(f"获取飞书集成凭证失败: {str(e)}")
+            return ""
     
     def _headers(self) -> dict:
         return {
@@ -121,6 +134,12 @@ def feishu_doc_write_node(
     try:
         # 初始化飞书客户端
         bitable = FeishuBitable()
+        
+        # 检查 access_token 是否有效
+        if not bitable.access_token:
+            error_msg = "飞书 access_token 获取失败，请检查 Coze 平台的飞书集成配置"
+            logger.error(error_msg)
+            return FeishuDocWriteOutput(feishu_url="", error=error_msg)
         
         # 确定或创建 Base
         if state.feishu_app_token:
