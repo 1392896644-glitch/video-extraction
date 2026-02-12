@@ -158,6 +158,42 @@ def health():
     """健康检查"""
     return jsonify({'status': 'ok'})
 
+@app.route('/debug')
+def debug():
+    """调试信息 - 显示环境变量和配置状态"""
+    from coze_workload_identity import Client
+    
+    debug_info = {
+        'environment_variables': {
+            'COZE_BUCKET_ENDPOINT_URL': '✅ 已配置' if os.getenv('COZE_BUCKET_ENDPOINT_URL') else '❌ 未配置',
+            'COZE_BUCKET_NAME': '✅ 已配置' if os.getenv('COZE_BUCKET_NAME') else '❌ 未配置',
+            'COZE_WORKLOAD_IDENTITY_API_KEY': '✅ 已配置' if os.getenv('COZE_WORKLOAD_IDENTITY_API_KEY') else '❌ 未配置',
+            'COZE_WORKLOAD_IDENTITY_CLIENT_ID': '✅ 已配置' if os.getenv('COZE_WORKLOAD_IDENTITY_CLIENT_ID') else '❌ 未配置',
+            'COZE_WORKLOAD_IDENTITY_ENDPOINT': '✅ 已配置' if os.getenv('COZE_WORKLOAD_IDENTITY_ENDPOINT') else '⚠️ 未配置（可选）',
+        },
+        'feishu_integration': {
+            'status': '检查中...'
+        }
+    }
+    
+    # 尝试获取飞书凭证
+    try:
+        client = Client()
+        feishu_token = client.get_integration_credential("integration-feishu-base")
+        debug_info['feishu_integration'] = {
+            'status': '✅ 成功获取',
+            'token_preview': f"{feishu_token[:20]}..." if feishu_token else '❌ 未配置',
+            'has_token': bool(feishu_token)
+        }
+    except Exception as e:
+        debug_info['feishu_integration'] = {
+            'status': '❌ 获取失败',
+            'error': str(e),
+            'has_token': False
+        }
+    
+    return jsonify(debug_info)
+
 if __name__ == '__main__':
     print("=" * 50)
     print("🎬 视频文案提取系统启动中...")
