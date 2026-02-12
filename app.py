@@ -118,6 +118,8 @@ def upload_video():
 def run_workflow(video_url):
     """运行工作流"""
     try:
+        logger.info("=" * 80)
+        logger.info("开始运行工作流")
         logger.info(f"使用视频 URL 调用工作流: {video_url}")
 
         # 创建File对象（使用对象存储的 URL）
@@ -125,24 +127,42 @@ def run_workflow(video_url):
 
         # 构建输入数据
         input_data = GraphInput(video_file=video_file)
+        logger.info(f"构建输入数据: {input_data}")
 
         # 调用工作流（不需要手动创建Runtime和Context）
+        logger.info("调用 main_graph.invoke()")
         result = main_graph.invoke(input_data, config={})
+        logger.info("工作流调用完成")
 
         # 检查返回值类型
+        logger.info(f"工作流返回值类型: {type(result)}")
+        
         if hasattr(result, 'model_dump'):
             # 如果是 Pydantic 模型，转换为字典
-            return result.model_dump()
+            logger.info("将 Pydantic 模型转换为字典")
+            result_dict = result.model_dump()
+            logger.info(f"返回结果: {result_dict}")
+            logger.info("=" * 80)
+            return result_dict
         elif isinstance(result, dict):
             # 如果是字典，直接返回
+            logger.info(f"返回结果（字典）: {result}")
+            logger.info("=" * 80)
             return result
         else:
             # 其他情况，尝试转换为字典
             logger.warning(f"工作流返回未知类型: {type(result)}")
-            return dict(result)
+            result_dict = dict(result)
+            logger.info(f"转换后的结果: {result_dict}")
+            logger.info("=" * 80)
+            return result_dict
 
     except Exception as e:
-        logger.error(f"工作流执行失败: {str(e)}", exc_info=True)
+        logger.error("=" * 80)
+        logger.error(f"❌ 工作流执行失败: {str(e)}")
+        logger.error(f"   异常类型: {type(e).__name__}")
+        logger.error(f"   异常详情: {str(e)}", exc_info=True)
+        logger.error("=" * 80)
         # 返回错误信息
         return {
             'error': str(e),

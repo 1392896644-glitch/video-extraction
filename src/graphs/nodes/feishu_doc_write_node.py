@@ -131,6 +131,10 @@ def feishu_doc_write_node(
     desc: 将提取的文案、摘要和改写文案写入飞书多维表格
     integrations: 飞书多维表格
     """
+    logger.info("=" * 80)
+    logger.info("飞书文档写入节点开始执行")
+    logger.info(f"输入数据 - extracted_text长度: {len(state.extracted_text)}, text_summary长度: {len(state.text_summary)}, text_analysis长度: {len(state.text_analysis)}, rewritten_texts数量: {len(state.rewritten_texts)}")
+    
     try:
         # 初始化飞书客户端
         bitable = FeishuBitable()
@@ -232,16 +236,35 @@ def feishu_doc_write_node(
         # 飞书Base的正确URL格式
         feishu_url = f"https://feishu.cn/base/{app_token}"
         
-        logger.info(f"成功写入飞书文档，记录ID: {record_id}")
-        logger.info(f"飞书多维表格访问链接: {feishu_url}")
+        logger.info("=" * 80)
+        logger.info(f"✅ 飞书文档写入成功！")
+        logger.info(f"   App Token: {app_token}")
+        logger.info(f"   Table ID: {table_id}")
+        logger.info(f"   Record ID: {record_id}")
+        logger.info(f"   飞书链接: {feishu_url}")
+        logger.info("=" * 80)
         
-        return FeishuDocWriteOutput(
+        output = FeishuDocWriteOutput(
             feishu_app_token=app_token,
             feishu_table_id=table_id,
             record_id=record_id,
             feishu_url=feishu_url
         )
         
+        logger.info(f"准备返回 FeishuDocWriteOutput: {output}")
+        return output
+        
     except Exception as e:
-        logger.error(f"飞书文档写入失败: {str(e)}")
-        raise Exception(f"飞书文档写入失败: {str(e)}")
+        logger.error("=" * 80)
+        logger.error(f"❌ 飞书文档写入失败: {str(e)}")
+        logger.error(f"   异常类型: {type(e).__name__}")
+        logger.error(f"   异常详情: {str(e)}", exc_info=True)
+        logger.error("=" * 80)
+        # 返回错误信息而不是抛出异常，让工作流可以继续
+        return FeishuDocWriteOutput(
+            feishu_app_token="",
+            feishu_table_id="",
+            record_id="",
+            feishu_url="",
+            error=f"飞书文档写入失败: {str(e)}"
+        )
