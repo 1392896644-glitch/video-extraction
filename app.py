@@ -129,8 +129,17 @@ def run_workflow(video_url):
         # 调用工作流（不需要手动创建Runtime和Context）
         result = main_graph.invoke(input_data, config={})
 
-        # 转换为字典返回
-        return result.model_dump()
+        # 检查返回值类型
+        if hasattr(result, 'model_dump'):
+            # 如果是 Pydantic 模型，转换为字典
+            return result.model_dump()
+        elif isinstance(result, dict):
+            # 如果是字典，直接返回
+            return result
+        else:
+            # 其他情况，尝试转换为字典
+            logger.warning(f"工作流返回未知类型: {type(result)}")
+            return dict(result)
 
     except Exception as e:
         logger.error(f"工作流执行失败: {str(e)}", exc_info=True)

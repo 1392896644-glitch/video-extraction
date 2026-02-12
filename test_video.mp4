@@ -1,0 +1,26 @@
+{
+  "id": "",
+  "model": "",
+  "status": "succeeded",
+  "content": {
+    "video_url": "https://coze-coding-mockdata.tos-cn-beijing.volces.com/video_c6UXsJm.mp4",
+    "last_frame_url": "",
+    "file_url": ""
+  },
+  "usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "frames": null,
+  "framespersecond": null,
+  "created_at": 0,
+  "updated_at": 0,
+  "HttpHeader": null
+}
