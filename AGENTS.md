@@ -1,6 +1,6 @@
 ## 项目概述
 - **名称**: 视频文案提取工作流
-- **功能**: 从视频中提取文案，生成摘要，进行文案分析（痛点、人群画像），生成5条不同风格的二创改写（品牌名称统一改为"立时"），并将结果整理到飞书多维表格中
+- **功能**: 从视频中提取文案，生成摘要，进行文案分析（痛点、人群画像），生成5条不同风格的二创改写（品牌名称统一改为"立时"）
 
 ### 节点清单
 | 节点名 | 文件位置 | 类型 | 功能描述 | 分支逻辑 | 配置文件 |
@@ -9,13 +9,11 @@
 | text_summary | `nodes/text_summary_node.py` | agent | 对提取的文案生成摘要 | - | `config/text_summary_cfg.json` |
 | text_analysis | `nodes/text_analysis_node.py` | agent | 深入分析文案的痛点、人群画像和成功原因 | - | `config/text_analysis_cfg.json` |
 | text_rewrite | `nodes/text_rewrite_node.py` | agent | 生成5条不同风格的改写文案，品牌改为"立时" | - | `config/text_rewrite_cfg.json` |
-| feishu_doc_write | `nodes/feishu_doc_write_node.py` | task | 将文案、摘要、分析和5条改写写入飞书多维表格 | - | - |
 
 **类型说明**: task(task节点) / agent(大模型) / condition(条件分支) / looparray(列表循环) / loopcond(条件循环)
 
 ## 技能使用
 - 节点`video_text_extraction`、`text_summary`、`text_analysis`、`text_rewrite`使用大语言模型技能（LLM）
-- 节点`feishu_doc_write`使用飞书多维表格技能
 
 ## 工作流说明
 1. **视频文案提取**: 使用多模态大模型（doubao-seed-1-6-vision-250815）分析上传的视频文件，提取画面中的文案
@@ -33,15 +31,6 @@
    - 改写3：数据说服型 - 用具体数据和事实说话，增强可信度
    - 改写4：场景化描述型 - 描述具体使用场景，让用户身临其境
    - 改写5：简洁有力型 - 用简洁有力的语言，直击核心
-5. **飞书文档写入**: 将文案、摘要、分析和5条改写内容写入飞书多维表格，包含8个字段：
-   - 提取文案信息
-   - 提取文案信息_摘要_
-   - 文案分析
-   - 文案改写1_痛点直击型
-   - 文案改写2_情感共鸣型
-   - 文案改写3_数据说服型
-   - 文案改写4_场景化描述型
-   - 文案改写5_简洁有力型
 
 ## 并行执行
 文案摘要生成、文案分析和文案改写三个节点并行执行，提高处理效率。
