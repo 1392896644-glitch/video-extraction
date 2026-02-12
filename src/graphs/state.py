@@ -10,10 +10,6 @@ class GlobalState(BaseModel):
     text_summary: str = Field(default="", description="文案摘要")
     text_analysis: str = Field(default="", description="文案分析（痛点、人群画像等）")
     rewritten_texts: List[str] = Field(default_factory=list, description="5条改写后的文案")
-    feishu_app_token: str = Field(default="", description="飞书多维表格App Token")
-    feishu_table_id: str = Field(default="", description="飞书数据表ID")
-    record_id: str = Field(default="", description="创建的记录ID")
-    feishu_url: str = Field(default="", description="飞书多维表格访问链接")
 
 # 工作流输入
 class GraphInput(BaseModel):
@@ -23,15 +19,10 @@ class GraphInput(BaseModel):
 # 工作流输出
 class GraphOutput(BaseModel):
     """工作流的输出"""
-    feishu_app_token: str = Field(default="", description="飞书多维表格App Token")
-    feishu_table_id: str = Field(default="", description="飞书数据表ID")
-    record_id: str = Field(default="", description="创建的记录ID")
-    feishu_url: str = Field(default="", description="飞书多维表格访问链接")
     extracted_text: str = Field(default="", description="提取的文案")
     text_summary: str = Field(default="", description="文案摘要")
     text_analysis: str = Field(default="", description="文案分析")
     rewritten_texts: List[str] = Field(default_factory=list, description="5条改写后的文案")
-    error: Optional[str] = Field(default="", description="错误信息（如果失败）")
 
 # 视频文案提取节点
 class VideoTextExtractionInput(BaseModel):

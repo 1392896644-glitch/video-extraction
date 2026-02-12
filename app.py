@@ -98,16 +98,12 @@ def upload_video():
         
         # 返回结果
         response_data = {
-            'success': not bool(result.get('error')),
-            'feishu_url': result.get('feishu_url', ''),
+            'success': True,
             'extracted_text': result.get('extracted_text', ''),
             'text_summary': result.get('text_summary', ''),
             'text_analysis': result.get('text_analysis', ''),
             'rewritten_texts': result.get('rewritten_texts', [])
         }
-        
-        if result.get('error'):
-            response_data['error'] = result.get('error')
         
         return jsonify(response_data)
         
@@ -134,15 +130,7 @@ def run_workflow(video_url):
 
     except Exception as e:
         logger.error(f"工作流执行失败: {str(e)}", exc_info=True)
-        # 返回错误信息
-        return {
-            'error': str(e),
-            'feishu_url': '',
-            'extracted_text': '',
-            'text_summary': '',
-            'text_analysis': '',
-            'rewritten_texts': []
-        }
+        raise e
 
 @app.route('/health')
 def health():
@@ -153,6 +141,6 @@ if __name__ == '__main__':
     print("=" * 50)
     print("🎬 视频文案提取系统启动中...")
     print("🌐 访问地址: http://localhost:5000")
-    print("📊 飞书链接将在上传后显示")
+    print("✨ 功能: 提取视频文案、生成摘要、分析痛点、生成5条改写文案")
     print("=" * 50)
     app.run(host='0.0.0.0', port=5000, debug=True)

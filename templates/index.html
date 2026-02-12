@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>视频文案提取</title>
+    <title>视频文案提取 - 提取、摘要、分析、改写</title>
     <style>
         * {
             margin: 0;
@@ -131,21 +131,41 @@
         .result h3 {
             color: #333;
             margin-bottom: 10px;
+            margin-top: 20px;
         }
 
-        .result a {
-            display: block;
-            padding: 15px;
-            background: #2196F3;
+        .result p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .result ul {
+            color: #666;
+            line-height: 1.6;
+            margin-left: 20px;
+        }
+
+        .result li {
+            margin-bottom: 10px;
+        }
+
+        .copy-btn {
+            display: inline-block;
+            padding: 8px 15px;
+            background: #4CAF50;
             color: white;
             text-decoration: none;
             border-radius: 5px;
-            text-align: center;
-            margin-top: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 5px;
         }
 
-        .result a:hover {
-            background: #0b7dda;
+        .copy-btn:hover {
+            background: #45a049;
         }
 
         .error {
@@ -176,7 +196,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>🎬 视频文案提取</h1>
+        <h1>🎬 视频文案提取工具</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 20px;">提取视频文案、生成摘要、分析痛点、生成5条改写文案</p>
         
         <div class="upload-area" id="uploadArea">
             <div class="upload-icon">📹</div>
@@ -203,8 +224,18 @@
         
         <div class="result" id="result">
             <h3>✅ 处理完成</h3>
-            <p>文案已提取并保存到飞书多维表格</p>
-            <a href="#" id="feishuLink" target="_blank">🔗 查看飞书表格</a>
+            
+            <h3>📝 提取的文案</h3>
+            <p id="extractedText"></p>
+            
+            <h3>📊 文案摘要</h3>
+            <p id="textSummary"></p>
+            
+            <h3>🔍 文案分析</h3>
+            <p id="textAnalysis"></p>
+            
+            <h3>✍️ 5条改写文案</h3>
+            <ul id="rewrittenTexts"></ul>
         </div>
     </div>
 
@@ -220,7 +251,10 @@
         const progress = document.getElementById('progress');
         const result = document.getElementById('result');
         const error = document.getElementById('error');
-        const feishuLink = document.getElementById('feishuLink');
+        const extractedText = document.getElementById('extractedText');
+        const textSummary = document.getElementById('textSummary');
+        const textAnalysis = document.getElementById('textAnalysis');
+        const rewrittenTexts = document.getElementById('rewrittenTexts');
 
         // 点击上传
         uploadArea.addEventListener('click', () => {
@@ -298,7 +332,16 @@
 
                 if (result_data.success) {
                     result.style.display = 'block';
-                    feishuLink.href = result_data.feishu_url;
+                    extractedText.textContent = result_data.extracted_text;
+                    textSummary.textContent = result_data.text_summary;
+                    textAnalysis.textContent = result_data.text_analysis;
+                    
+                    rewrittenTexts.innerHTML = '';
+                    result_data.rewritten_texts.forEach((text, index) => {
+                        const li = document.createElement('li');
+                        li.textContent = text;
+                        rewrittenTexts.appendChild(li);
+                    });
                 } else {
                     error.textContent = '处理失败：' + result_data.error;
                     error.style.display = 'block';
@@ -322,7 +365,6 @@
                 { value: 20, text: '提取视频中...' },
                 { value: 40, text: '分析文案中...' },
                 { value: 60, text: '生成改写中...' },
-                { value: 80, text: '保存到飞书中...' },
                 { value: 100, text: '完成！' }
             ];
 
