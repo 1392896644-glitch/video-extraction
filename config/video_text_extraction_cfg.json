@@ -3,7 +3,7 @@
         "model": "doubao-seed-1-6-vision-250815",
         "temperature": 0.3,
         "top_p": 0.9,
-        "max_completion_tokens": 8192,
+        "max_completion_tokens": 16384,
         "thinking": "disabled"
     },
     "tools": [],
