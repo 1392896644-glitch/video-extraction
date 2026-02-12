@@ -225,6 +225,10 @@
         <div class="result" id="result">
             <h3>✅ 处理完成</h3>
             
+            <div id="feishuLinkContainer">
+                <a href="#" id="feishuLink" target="_blank">🔗 查看飞书表格</a>
+            </div>
+            
             <h3>📝 提取的文案</h3>
             <p id="extractedText"></p>
             
@@ -251,6 +255,8 @@
         const progress = document.getElementById('progress');
         const result = document.getElementById('result');
         const error = document.getElementById('error');
+        const feishuLink = document.getElementById('feishuLink');
+        const feishuLinkContainer = document.getElementById('feishuLinkContainer');
         const extractedText = document.getElementById('extractedText');
         const textSummary = document.getElementById('textSummary');
         const textAnalysis = document.getElementById('textAnalysis');
@@ -332,10 +338,25 @@
 
                 if (result_data.success) {
                     result.style.display = 'block';
+                    
+                    // 显示飞书链接（如果有）
+                    if (result_data.feishu_url) {
+                        feishuLink.href = result_data.feishu_url;
+                        feishuLinkContainer.style.display = 'block';
+                    } else {
+                        feishuLinkContainer.style.display = 'none';
+                    }
+                    
+                    // 显示提取的文案
                     extractedText.textContent = result_data.extracted_text;
+                    
+                    // 显示文案摘要
                     textSummary.textContent = result_data.text_summary;
+                    
+                    // 显示文案分析
                     textAnalysis.textContent = result_data.text_analysis;
                     
+                    // 显示5条改写文案
                     rewrittenTexts.innerHTML = '';
                     result_data.rewritten_texts.forEach((text, index) => {
                         const li = document.createElement('li');
@@ -365,6 +386,7 @@
                 { value: 20, text: '提取视频中...' },
                 { value: 40, text: '分析文案中...' },
                 { value: 60, text: '生成改写中...' },
+                { value: 80, text: '保存到飞书中...' },
                 { value: 100, text: '完成！' }
             ];
 

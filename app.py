@@ -98,12 +98,16 @@ def upload_video():
         
         # 返回结果
         response_data = {
-            'success': True,
+            'success': not bool(result.get('error')),
+            'feishu_url': result.get('feishu_url', ''),
             'extracted_text': result.get('extracted_text', ''),
             'text_summary': result.get('text_summary', ''),
             'text_analysis': result.get('text_analysis', ''),
             'rewritten_texts': result.get('rewritten_texts', [])
         }
+        
+        if result.get('error'):
+            response_data['error'] = result.get('error')
         
         return jsonify(response_data)
         
@@ -130,7 +134,15 @@ def run_workflow(video_url):
 
     except Exception as e:
         logger.error(f"工作流执行失败: {str(e)}", exc_info=True)
-        raise e
+        # 返回错误信息
+        return {
+            'error': str(e),
+            'feishu_url': '',
+            'extracted_text': '',
+            'text_summary': '',
+            'text_analysis': '',
+            'rewritten_texts': []
+        }
 
 @app.route('/health')
 def health():

@@ -8,6 +8,7 @@ from graphs.nodes.video_text_extraction_node import video_text_extraction_node
 from graphs.nodes.text_summary_node import text_summary_node
 from graphs.nodes.text_analysis_node import text_analysis_node
 from graphs.nodes.text_rewrite_node import text_rewrite_node
+from graphs.nodes.feishu_doc_write_node import feishu_doc_write_node
 
 # 创建状态图，指定工作流的入参和出参
 builder = StateGraph(GlobalState, input_schema=GraphInput, output_schema=GraphOutput)
@@ -41,6 +42,9 @@ builder.add_node(
     metadata={"type": "agent", "llm_cfg": "config/text_rewrite_cfg.json"}
 )
 
+# 5. 飞书文档写入节点（普通节点）
+builder.add_node("feishu_doc_write", feishu_doc_write_node)
+
 # 设置入口点
 builder.set_entry_point("video_text_extraction")
 
@@ -49,8 +53,11 @@ builder.add_edge("video_text_extraction", "text_summary")
 builder.add_edge("video_text_extraction", "text_analysis")
 builder.add_edge("video_text_extraction", "text_rewrite")
 
-# 添加边：摘要生成、文案分析和文案改写都完成后，直接结束（移除飞书节点）
-builder.add_edge(["text_summary", "text_analysis", "text_rewrite"], END)
+# 添加边：摘要生成、文案分析和文案改写都完成后，执行飞书文档写入
+builder.add_edge(["text_summary", "text_analysis", "text_rewrite"], "feishu_doc_write")
+
+# 添加边：飞书文档写入完成后结束
+builder.add_edge("feishu_doc_write", END)
 
 # 编译图
 main_graph = builder.compile()
