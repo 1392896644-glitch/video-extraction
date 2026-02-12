@@ -44,8 +44,20 @@ class FeishuBitable:
                 json=json_body, 
                 timeout=self.timeout
             )
-            resp_data = resp.json()
-            logger.info(f"响应状态码: {resp.status_code}")
+            logger.info(f"响应状态码: {resp.status_code}, 响应内容: {resp.text[:500] if resp.text else '空响应'}")
+            
+            # 检查响应是否为空
+            if not resp.text or resp.text.strip() == "":
+                logger.error(f"飞书API返回空响应，状态码: {resp.status_code}")
+                raise Exception(f"飞书API返回空响应，状态码: {resp.status_code}")
+            
+            # 尝试解析 JSON
+            try:
+                resp_data = resp.json()
+            except ValueError as e:
+                logger.error(f"JSON解析失败: {str(e)}, 响应内容: {resp.text}")
+                raise Exception(f"飞书API返回无效的JSON格式: {resp.text}")
+            
         except requests.exceptions.RequestException as e:
             logger.error(f"请求异常: {str(e)}")
             raise Exception(f"FeishuBitable API request error: {e}")
