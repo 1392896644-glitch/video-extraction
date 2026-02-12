@@ -14,7 +14,7 @@ class FeishuBitable:
     
     def __init__(self):
         self.client = Client()
-        self.base_url = "https://open.larkoffice.com/open-apis"
+        self.base_url = "https://open.feishu.cn/open-apis"
         self.timeout = 30
         try:
             self.access_token = self.get_access_token()
