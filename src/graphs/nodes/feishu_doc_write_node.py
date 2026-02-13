@@ -15,26 +15,34 @@ class FeishuBitable:
     def __init__(self):
         self.client = Client()
         self.base_url = "https://open.feishu.cn/open-apis"
-        self.timeout = 30
+        self.timeout = 120  # 增加到120秒
         try:
+            logger.info("开始获取飞书 access_token...")
             self.access_token = self.get_access_token()
             if not self.access_token:
-                logger.error("未能获取飞书 access_token，请检查飞书集成配置")
+                error_msg = "❌ 未能获取飞书 access_token，请检查飞书集成配置"
+                logger.error(error_msg)
             else:
-                logger.info(f"成功获取飞书access_token: {self.access_token[:20]}...")
+                logger.info(f"✅ 成功获取飞书access_token: {self.access_token[:20]}...")
         except Exception as e:
-            logger.error(f"获取飞书 access_token 失败: {str(e)}")
+            error_msg = f"❌ 获取飞书 access_token 失败: {str(e)}"
+            logger.error(error_msg, exc_info=True)
             self.access_token = ""
     
     def get_access_token(self) -> str:
         """获取飞书多维表格的租户访问令牌"""
         try:
+            logger.info("正在调用 get_integration_credential 获取飞书凭证...")
             access_token = self.client.get_integration_credential("integration-feishu-base")
             if not access_token:
-                logger.error("飞书集成凭证为空，请检查 Coze 平台的飞书集成配置")
+                logger.error("❌ 飞书集成凭证为空，请检查 Coze 平台的飞书集成配置")
+                logger.error("提示：需要在 Render 上配置环境变量 COZE_WORKLOAD_IDENTITY_API_KEY 和 COZE_WORKLOAD_IDENTITY_CLIENT_ID")
+            else:
+                logger.info(f"✅ 飞书凭证获取成功，长度: {len(access_token)}")
             return access_token or ""
         except Exception as e:
-            logger.error(f"获取飞书集成凭证失败: {str(e)}")
+            logger.error(f"❌ 获取飞书集成凭证失败: {str(e)}", exc_info=True)
+            logger.error("提示：请检查 Render 环境变量配置")
             return ""
     
     def _headers(self) -> dict:
