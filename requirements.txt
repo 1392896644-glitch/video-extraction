@@ -54,3 +54,7 @@ boto3==1.40.61
 botocore==1.40.61
 typing_extensions==4.15.0
 packaging==25.0
+
+# 排除会导致编译失败的包（使用 - 前缀）
+-dbus-python
+-PyGObject
