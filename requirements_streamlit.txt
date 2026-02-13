@@ -1,0 +1,48 @@
+# Streamlit 应用依赖
+streamlit==1.39.0
+
+# 核心依赖
+coze-coding-dev-sdk==0.5.9
+coze-coding-utils==0.2.4
+coze-workload-identity==0.1.4
+cozeloop==0.1.25
+
+# LangGraph 和 LangChain
+langgraph==1.0.2
+langchain==1.0.3
+langchain-core==1.0.2
+langchain-openai==1.0.1
+langsmith==0.4.39
+
+# 数据处理
+numpy==2.4.2
+pandas==3.0.0
+pillow==12.1.1
+
+# HTTP 请求
+httpx==0.28.1
+httpcore==1.0.9
+requests==2.32.5
+urllib3==2.6.3
+
+# 视频处理
+opencv-python==4.13.0.92
+
+# 文件处理
+chardet==5.2.0
+python-pptx==1.0.2
+
+# 模板引擎
+Jinja2==3.1.6
+
+# 其他必要依赖
+pydantic==2.12.3
+pydantic_core==2.41.4
+openai==2.16.0
+tiktoken==0.12.0
+cryptography==46.0.4
+python-dotenv==1.2.1
+boto3==1.40.61
+botocore==1.40.61
+typing_extensions==4.15.0
+packaging==25.0
