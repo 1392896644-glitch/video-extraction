@@ -160,10 +160,10 @@ def feishu_doc_write_node(
             app_id,
             table_id,
             fields={
-                "视频标题": state.video_title,
-                "原始文案": state.extracted_text[:2000] if state.extracted_text else "",  # 限制长度
-                "文案摘要": state.text_summary[:1000] if state.text_summary else "",
-                "文案改写": state.text_rewrite[:2000] if state.text_rewrite else "",
+                "视频标题": state.video_title[:500] if state.video_title else "",  # 限制到 500
+                "原始文案": state.extracted_text[:1000] if state.extracted_text else "",  # 限制到 1000
+                "文案摘要": state.text_summary[:500] if state.text_summary else "",  # 限制到 500
+                "文案改写": state.text_rewrite[:1000] if state.text_rewrite else "",  # 限制到 1000
             }
         )
 

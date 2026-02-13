@@ -14,10 +14,10 @@ from graphs.graph import main_graph
 from graphs.state import GraphInput
 from utils.file.file import File
 
-# 配置日志（降低日志级别以减少内存占用）
-logging.basicConfig(level=logging.WARNING)
+# 配置日志（完全禁用日志以减少内存占用）
+logging.disable(logging.CRITICAL)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)  # 只在关键地方输出 INFO
+logger.disabled = True
 
 # 初始化对象存储（使用 Coze S3 代理）
 storage = S3SyncStorage(
