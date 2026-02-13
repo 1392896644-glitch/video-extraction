@@ -1,7 +1,3 @@
-# Python 依赖列表
-# 注意：此列表不包含任何需要系统库的包（如 dbus-python、PyGObject）
-# 如果遇到编译错误，请检查是否有包自动引入了这些依赖
-
 alembic==1.16.5
 annotated-doc==0.0.4
 annotated-types==0.7.0
@@ -26,7 +22,6 @@ coze-workload-identity==0.1.4
 cozeloop==0.1.25
 cryptography==46.0.4
 cssselect==1.4.0
-dbus-python==1.3.2
 deprecation==2.1.0
 dill==0.4.1
 distro==1.9.0
@@ -148,7 +143,6 @@ tzdata==2025.3
 tzlocal==5.3.1
 urllib3==2.6.3
 uvicorn==0.38.0
-watchdog==6.0.0
 websockets==15.0.1
 Werkzeug==3.1.5
 wheel==0.42.0

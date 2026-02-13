@@ -1,0 +1,10 @@
+#!/bin/bash
+# Render 缓存清理脚本
+
+echo "清理 pip 缓存..."
+pip cache purge
+
+echo "清理构建缓存..."
+rm -rf /opt/render/project/.cache
+
+echo "缓存清理完成！"
