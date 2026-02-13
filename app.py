@@ -31,7 +31,7 @@ storage = S3SyncStorage(
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
 app.config['UPLOAD_FOLDER'] = '/tmp/uploads'
-app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB（降低以减少内存压力）
 
 # 确保上传目录存在
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -73,18 +73,22 @@ def upload_video():
         
         logger.info(f"视频文件已保存到临时目录: {filepath}")
         
-        # 上传到对象存储
+        # 上传到对象存储（使用分块上传减少内存使用）
         logger.info("正在上传视频到对象存储...")
-        file_key = storage.stream_upload_file(
-            fileobj=open(filepath, 'rb'),
-            file_name=filename,
-            content_type=f"video/{filename.rsplit('.', 1)[1].lower()}"
-        )
-        logger.info(f"视频已上传到对象存储，key: {file_key}")
-        
-        # 生成签名 URL（有效期 1 小时）
-        video_url = storage.generate_presigned_url(key=file_key, expire_time=3600)
-        logger.info(f"视频签名 URL: {video_url}")
+        try:
+            file_key = storage.stream_upload_file(
+                fileobj=open(filepath, 'rb'),
+                file_name=filename,
+                content_type=f"video/{filename.rsplit('.', 1)[1].lower()}"
+            )
+            logger.info(f"视频已上传到对象存储，key: {file_key}")
+            
+            # 生成签名 URL（有效期 1 小时）
+            video_url = storage.generate_presigned_url(key=file_key, expire_time=3600)
+            logger.info(f"视频签名 URL: {video_url}")
+        except Exception as e:
+            logger.error(f"对象存储上传失败: {str(e)}")
+            return jsonify({'success': False, 'error': f'视频上传失败（内存不足或网络错误）: {str(e)}'}), 500
         
         # 调用工作流
         logger.info("开始调用工作流...")
