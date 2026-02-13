@@ -9,7 +9,7 @@
 | text_summary | `nodes/text_summary_node.py` | agent | 对提取的文案生成摘要 | - | `config/text_summary_cfg.json` |
 | text_analysis | `nodes/text_analysis_node.py` | agent | 深入分析文案的痛点、人群画像和成功原因 | - | `config/text_analysis_cfg.json` |
 | text_rewrite | `nodes/text_rewrite_node.py` | agent | 生成5条不同风格的改写文案，品牌改为"立时" | - | `config/text_rewrite_cfg.json` |
-| feishu_doc_write | `nodes/feishu_doc_write_node.py` | task | 将文案、摘要、分析和5条改写写入飞书多维表格 | - | - |
+| feishu_doc_write | `nodes/feishu_doc_write_node.py` | task | 将文案、摘要、分析和5条改写写入飞书多维表格（内存优化版） | - | - |
 
 **类型说明**: task(task节点) / agent(大模型) / condition(条件分支) / looparray(列表循环) / loopcond(条件循环)
 
@@ -43,8 +43,16 @@
    - 文案改写4_场景化描述型
    - 文案改写5_简洁有力型
 
-## 并行执行
-文案摘要生成、文案分析和文案改写三个节点并行执行，提高处理效率。
+## 执行顺序（内存优化）
+为了适配低内存环境（如Render免费版512MB），工作流采用串行执行顺序：
+1. 视频文案提取 → 2. 文案摘要生成 → 3. 文案分析 → 4. 文案改写 → 5. 飞书文档写入
+
+这样可以显著降低内存峰值，避免内存不足导致的进程被杀掉问题。
+
+飞书文档写入节点经过内存优化：
+- 延迟初始化飞书客户端和凭证
+- 限制字段长度（文案2000字符，摘要1000字符）
+- 不存储中间变量，直接写入飞书
 
 ## 视频文件上传说明
 

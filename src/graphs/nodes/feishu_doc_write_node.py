@@ -10,124 +10,129 @@ from cozeloop.decorator import observe
 logger = logging.getLogger(__name__)
 
 class FeishuBitable:
-    """飞书多维表格HTTP客户端"""
-    
+    """飞书多维表格HTTP客户端（内存优化版）"""
+
     def __init__(self):
-        self.client = Client()
+        self.client = None  # 延迟初始化
+        self.access_token = ""  # 延迟初始化
         self.base_url = "https://open.feishu.cn/open-apis"
-        self.timeout = 120  # 增加到120秒
+        self.timeout = 120
+
+    def _init_client(self):
+        """延迟初始化客户端和凭证"""
+        if self.client is not None and self.access_token:
+            return  # 已经初始化过
+
+        logger.info("🔧 初始化飞书客户端...")
+        self.client = Client()
+
+        logger.info("🔑 获取飞书 access_token...")
         try:
-            logger.info("开始获取飞书 access_token...")
-            self.access_token = self.get_access_token()
+            self.access_token = self.client.get_integration_credential("integration-feishu-base")
             if not self.access_token:
-                error_msg = "❌ 未能获取飞书 access_token，请检查飞书集成配置"
-                logger.error(error_msg)
-            else:
-                logger.info(f"✅ 成功获取飞书access_token: {self.access_token[:20]}...")
+                raise Exception("飞书集成凭证为空")
+            logger.info(f"✅ 成功获取飞书 access_token: {self.access_token[:20]}...")
         except Exception as e:
-            error_msg = f"❌ 获取飞书 access_token 失败: {str(e)}"
-            logger.error(error_msg, exc_info=True)
+            logger.error(f"❌ 获取飞书 access_token 失败: {str(e)}")
             self.access_token = ""
-    
-    def get_access_token(self) -> str:
-        """获取飞书多维表格的租户访问令牌"""
-        try:
-            logger.info("正在调用 get_integration_credential 获取飞书凭证...")
-            access_token = self.client.get_integration_credential("integration-feishu-base")
-            if not access_token:
-                logger.error("❌ 飞书集成凭证为空，请检查 Coze 平台的飞书集成配置")
-                logger.error("提示：需要在 Render 上配置环境变量 COZE_WORKLOAD_IDENTITY_API_KEY 和 COZE_WORKLOAD_IDENTITY_CLIENT_ID")
-            else:
-                logger.info(f"✅ 飞书凭证获取成功，长度: {len(access_token)}")
-            return access_token or ""
-        except Exception as e:
-            logger.error(f"❌ 获取飞书集成凭证失败: {str(e)}", exc_info=True)
-            logger.error("提示：请检查 Render 环境变量配置")
-            return ""
-    
-    def _headers(self) -> dict:
+            raise
+
+    def _headers(self):
+        """获取请求头"""
         return {
             "Authorization": f"Bearer {self.access_token}" if self.access_token else "",
             "Content-Type": "application/json; charset=utf-8",
         }
-    
+
     @observe
     def _request(self, method: str, path: str, params: dict = None, json_body: dict = None) -> dict:
-        """发送HTTP请求"""
+        """发送HTTP请求（简化版，减少内存使用）"""
         try:
             url = f"{self.base_url}{path}"
-            logger.info(f"发送请求: {method} {url}")
             resp = requests.request(
-                method, 
-                url, 
-                headers=self._headers(), 
-                params=params, 
-                json=json_body, 
+                method,
+                url,
+                headers=self._headers(),
+                params=params,
+                json=json_body,
                 timeout=self.timeout
             )
-            logger.info(f"响应状态码: {resp.status_code}, 响应内容: {resp.text[:500] if resp.text else '空响应'}")
-            
-            # 检查响应是否为空
+
             if not resp.text or resp.text.strip() == "":
-                logger.error(f"飞书API返回空响应，状态码: {resp.status_code}")
                 raise Exception(f"飞书API返回空响应，状态码: {resp.status_code}")
-            
-            # 尝试解析 JSON
-            try:
-                resp_data = resp.json()
-            except ValueError as e:
-                logger.error(f"JSON解析失败: {str(e)}, 响应内容: {resp.text}")
-                raise Exception(f"飞书API返回无效的JSON格式: {resp.text}")
-            
-        except requests.exceptions.RequestException as e:
+
+            resp_data = resp.json()
+
+        except Exception as e:
             logger.error(f"请求异常: {str(e)}")
-            raise Exception(f"FeishuBitable API request error: {e}")
-        
+            raise Exception(f"FeishuBitable API error: {e}")
+
         if resp_data.get("code") != 0:
-            logger.error(f"飞书API错误: {resp_data}")
             raise Exception(f"FeishuBitable API error: {resp_data}")
-        
+
         return resp_data
-    
-    def create_base(self, name: str) -> dict:
-        """创建多维表格Base"""
-        body = {"name": name}
-        logger.info(f"创建Base，名称: {name}")
-        return self._request("POST", "/bitable/v1/apps", json_body=body)
-    
-    def list_tables(self, app_token: str) -> dict:
-        """列出Base下所有数据表"""
-        return self._request("GET", f"/bitable/v1/apps/{app_token}/tables")
-    
-    def create_table(self, app_token: str, table_name: str, fields: list = None) -> dict:
+
+    @observe
+    def get_or_create_base(self, name: str) -> str:
+        """获取或创建多维表格"""
+        self._init_client()  # 确保客户端已初始化
+
+        # 搜索
+        resp = self._request(
+            "GET",
+            "/bitable/v1/apps",
+            params={"page_size": 20}
+        )
+
+        for item in resp.get("data", {}).get("items", []):
+            if item.get("name") == name:
+                logger.info(f"✅ 找到已有的 Base: {item['app_id']}")
+                return item["app_id"]
+
+        # 创建
+        logger.info(f"🔨 创建新 Base: {name}")
+        resp = self._request(
+            "POST",
+            "/bitable/v1/apps",
+            json_body={"name": name}
+        )
+        logger.info(f"✅ Base 创建成功: {resp['data']['app']['app_id']}")
+        return resp["data"]["app"]["app_id"]
+
+    @observe
+    def create_table(self, app_id: str, table_name: str) -> str:
         """创建数据表"""
-        body = {
-            "table": {
+        logger.info(f"🔨 创建数据表: {table_name}")
+        resp = self._request(
+            "POST",
+            f"/bitable/v1/apps/{app_id}/tables",
+            json_body={
+                "default": False,
                 "name": table_name,
-                "table_type": "bitable"
+                "fields": [
+                    {"name": "视频标题", "type": 1},
+                    {"name": "原始文案", "type": 1},
+                    {"name": "文案摘要", "type": 1},
+                    {"name": "文案改写", "type": 1},
+                ]
             }
-        }
-        if fields is not None:
-            body["table"]["fields"] = fields
-        logger.info(f"创建数据表，名称: {table_name}")
-        return self._request("POST", f"/bitable/v1/apps/{app_token}/tables", json_body=body)
-    
-    def add_field(self, app_token: str, table_id: str, field: dict) -> dict:
-        """新增字段"""
-        return self._request(
-            "POST", 
-            f"/bitable/v1/apps/{app_token}/tables/{table_id}/fields", 
-            json_body=field
         )
-    
-    def add_records(self, app_token: str, table_id: str, records: list) -> dict:
-        """批量新增记录"""
-        body = {"records": records}
-        return self._request(
-            "POST", 
-            f"/bitable/v1/apps/{app_token}/tables/{table_id}/records/batch_create", 
-            json_body=body
+        logger.info(f"✅ 数据表创建成功: {resp['data']['table']['table_id']}")
+        return resp["data"]["table"]["table_id"]
+
+    @observe
+    def add_record(self, app_id: str, table_id: str, fields: dict) -> str:
+        """添加记录"""
+        logger.info(f"📝 添加记录到表格...")
+        resp = self._request(
+            "POST",
+            f"/bitable/v1/apps/{app_id}/tables/{table_id}/records",
+            json_body={"fields": fields}
         )
+        record_id = resp["data"]["record"]["record_id"]
+        logger.info(f"✅ 记录添加成功: {record_id}")
+        return record_id
+
 
 def feishu_doc_write_node(
     state: FeishuDocWriteInput,
@@ -136,143 +141,45 @@ def feishu_doc_write_node(
 ) -> FeishuDocWriteOutput:
     """
     title: 飞书文档写入
-    desc: 将提取的文案、摘要和改写文案写入飞书多维表格
-    integrations: 飞书多维表格
+    desc: 将视频文案信息写入飞书多维表格（内存优化版）
+    integrations: 飞书多维表格, 对象存储
     """
-    logger.info("=" * 80)
-    logger.info("飞书文档写入节点开始执行")
-    logger.info(f"输入数据 - extracted_text长度: {len(state.extracted_text)}, text_summary长度: {len(state.text_summary)}, text_analysis长度: {len(state.text_analysis)}, rewritten_texts数量: {len(state.rewritten_texts)}")
-    
+    logger.info("🚀 开始飞书文档写入节点（内存优化版）")
+
     try:
-        # 初始化飞书客户端
         bitable = FeishuBitable()
-        
-        # 检查 access_token 是否有效
-        if not bitable.access_token:
-            error_msg = "飞书 access_token 获取失败，请检查 Coze 平台的飞书集成配置"
-            logger.error(error_msg)
-            return FeishuDocWriteOutput(feishu_url="", error=error_msg)
-        
-        # 确定或创建 Base
-        if state.feishu_app_token:
-            app_token = state.feishu_app_token
-            logger.info(f"使用现有的飞书Base: {app_token}")
-        else:
-            # 创建新的Base
-            base_result = bitable.create_base(name="VideoTextExtractionWorkflow")
-            app_token = base_result["data"]["app"]["app_token"]
-            logger.info(f"创建新的飞书Base: {app_token}")
-            logger.info(f"Base详细信息: {base_result}")
-        
-        # 确定或创建 Table
-        if state.feishu_table_id:
-            table_id = state.feishu_table_id
-            logger.info(f"使用现有的数据表: {table_id}")
-        else:
-            # 创建新的数据表（不预定义字段）
-            table_result = bitable.create_table(app_token, "TextExtractionRecords")
-            table_id = table_result["data"]["table_id"]
-            logger.info(f"创建新的数据表: {table_id}")
-            
-            # 创建字段
-            fields = [
-                {
-                    "field_name": "提取文案信息",
-                    "type": 1  # 文本类型
-                },
-                {
-                    "field_name": "提取文案信息_摘要_",
-                    "type": 1  # 文本类型
-                },
-                {
-                    "field_name": "文案分析",
-                    "type": 1  # 文本类型
-                },
-                {
-                    "field_name": "文案改写1_痛点直击型",
-                    "type": 1  # 文本类型
-                },
-                {
-                    "field_name": "文案改写2_情感共鸣型",
-                    "type": 1  # 文本类型
-                },
-                {
-                    "field_name": "文案改写3_数据说服型",
-                    "type": 1  # 文本类型
-                },
-                {
-                    "field_name": "文案改写4_场景化描述型",
-                    "type": 1  # 文本类型
-                },
-                {
-                    "field_name": "文案改写5_简洁有力型",
-                    "type": 1  # 文本类型
-                }
-            ]
-            
-            for field in fields:
-                field_result = bitable.add_field(app_token, table_id, field)
-                logger.info(f"创建字段响应: {field_result}")
-                logger.info(f"创建字段成功: {field['field_name']}")
-        
-        # 创建记录
-        # 确保5条改写文案
-        rewritten_texts = state.rewritten_texts
-        if len(rewritten_texts) < 5:
-            # 如果不足5条，用空字符串补齐
-            rewritten_texts.extend([""] * (5 - len(rewritten_texts)))
-        
-        records = [
-            {
-                "fields": {
-                    "提取文案信息": state.extracted_text,
-                    "提取文案信息_摘要_": state.text_summary,
-                    "文案分析": state.text_analysis,
-                    "文案改写1_痛点直击型": rewritten_texts[0] if len(rewritten_texts) > 0 else "",
-                    "文案改写2_情感共鸣型": rewritten_texts[1] if len(rewritten_texts) > 1 else "",
-                    "文案改写3_数据说服型": rewritten_texts[2] if len(rewritten_texts) > 2 else "",
-                    "文案改写4_场景化描述型": rewritten_texts[3] if len(rewritten_texts) > 3 else "",
-                    "文案改写5_简洁有力型": rewritten_texts[4] if len(rewritten_texts) > 4 else ""
-                }
+
+        base_name = "视频文案提取"
+        table_name = "文案记录"
+
+        app_id = bitable.get_or_create_base(base_name)
+        table_id = bitable.create_table(app_id, table_name)
+
+        # 直接写入，不存储中间变量
+        record_id = bitable.add_record(
+            app_id,
+            table_id,
+            fields={
+                "视频标题": state.video_title,
+                "原始文案": state.extracted_text[:2000] if state.extracted_text else "",  # 限制长度
+                "文案摘要": state.text_summary[:1000] if state.text_summary else "",
+                "文案改写": state.text_rewrite[:2000] if state.text_rewrite else "",
             }
-        ]
-        
-        add_result = bitable.add_records(app_token, table_id, records)
-        record_id = add_result["data"]["records"][0]["record_id"]
-        
-        # 生成飞书多维表格访问链接
-        # 飞书Base的正确URL格式
-        feishu_url = f"https://feishu.cn/base/{app_token}"
-        
-        logger.info("=" * 80)
-        logger.info(f"✅ 飞书文档写入成功！")
-        logger.info(f"   App Token: {app_token}")
-        logger.info(f"   Table ID: {table_id}")
-        logger.info(f"   Record ID: {record_id}")
-        logger.info(f"   飞书链接: {feishu_url}")
-        logger.info("=" * 80)
-        
-        output = FeishuDocWriteOutput(
-            feishu_app_token=app_token,
-            feishu_table_id=table_id,
-            record_id=record_id,
-            feishu_url=feishu_url
         )
-        
-        logger.info(f"准备返回 FeishuDocWriteOutput: {output}")
-        return output
-        
-    except Exception as e:
-        logger.error("=" * 80)
-        logger.error(f"❌ 飞书文档写入失败: {str(e)}")
-        logger.error(f"   异常类型: {type(e).__name__}")
-        logger.error(f"   异常详情: {str(e)}", exc_info=True)
-        logger.error("=" * 80)
-        # 返回错误信息而不是抛出异常，让工作流可以继续
+
+        # 构造飞书链接
+        spreadsheet_url = f"https://feishu.cn/base/{app_id}?table={table_id}&view=vew"
+
+        logger.info(f"🎉 飞书文档写入成功！链接: {spreadsheet_url}")
+
         return FeishuDocWriteOutput(
-            feishu_app_token="",
-            feishu_table_id="",
-            record_id="",
-            feishu_url="",
+            feishu_link=spreadsheet_url,
+            error=""
+        )
+
+    except Exception as e:
+        logger.error(f"❌ 飞书文档写入失败: {str(e)}", exc_info=True)
+        return FeishuDocWriteOutput(
+            feishu_link="",
             error=f"飞书文档写入失败: {str(e)}"
         )

@@ -48,13 +48,11 @@ builder.add_node("feishu_doc_write", feishu_doc_write_node)
 # 设置入口点
 builder.set_entry_point("video_text_extraction")
 
-# 添加边：视频文案提取完成后，并行执行摘要生成、文案分析和文案改写
+# 添加边：串行执行，减少内存峰值
 builder.add_edge("video_text_extraction", "text_summary")
-builder.add_edge("video_text_extraction", "text_analysis")
-builder.add_edge("video_text_extraction", "text_rewrite")
-
-# 添加边：摘要生成、文案分析和文案改写都完成后，执行飞书文档写入
-builder.add_edge(["text_summary", "text_analysis", "text_rewrite"], "feishu_doc_write")
+builder.add_edge("text_summary", "text_analysis")
+builder.add_edge("text_analysis", "text_rewrite")
+builder.add_edge("text_rewrite", "feishu_doc_write")
 
 # 添加边：飞书文档写入完成后结束
 builder.add_edge("feishu_doc_write", END)
