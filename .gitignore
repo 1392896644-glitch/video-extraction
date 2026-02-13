@@ -4,60 +4,38 @@ __pycache__/
 *$py.class
 *.so
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual Environment
-venv/
 env/
+venv/
 ENV/
+.venv/
 
 # Flask
 instance/
 .webassets-cache
+
+# Logs
+*.log
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
-logs/
-
-# Temporary files
+# Temp
 /tmp/
 *.tmp
 
-# Environment
-.env
-.env.local
+# Dependencies（自动生成，不应提交）
+requirements_auto.txt
+requirements_clean.txt
+requirements_clean2.txt
+requirements_final.txt
+local_packages.txt
 
-# Uploads
-uploads/
-/tmp/uploads/*
-!tmp/uploads/.gitkeep
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
+# Git 钩子
+.git/hooks/pre-commit

@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Git pre-commit hook - 防止 requirements.txt 被污染
+
+echo "检查 requirements.txt 是否包含问题包..."
+
+if git diff --cached --name-only | grep -q "requirements.txt"; then
+    echo "检测到 requirements.txt 的变更"
+
+    # 检查是否包含问题包
+    if git diff --cached requirements.txt | grep -E "^\+.*\b(dbus-python|PyGObject|watchdog)\b" > /dev/null; then
+        echo "❌ 错误：requirements.txt 包含问题包（dbus-python、PyGObject 或 watchdog）"
+        echo "❌ 这些包会导致编译失败"
+        echo "❌ 请使用 requirements_minimal.txt 或手动维护 requirements.txt"
+        echo ""
+        echo "修复方法："
+        echo "  cp requirements_minimal.txt requirements.txt"
+        echo ""
+        exit 1
+    fi
+
+    echo "✅ requirements.txt 检查通过"
+fi
+
+exit 0
