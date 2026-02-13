@@ -31,9 +31,17 @@ pillow==10.4.0
 httpx==0.28.1
 httpcore==1.0.9
 requests==2.32.5
+urllib3==2.6.3
 
 # 视频处理
 opencv-python==4.12.0.88
+
+# 文件处理
+chardet==5.2.0
+python-pptx==1.0.2
+
+# 模板引擎
+Jinja2==3.1.6
 
 # 其他必要依赖
 pydantic==2.12.3
@@ -44,3 +52,5 @@ cryptography==46.0.4
 python-dotenv==1.2.1
 boto3==1.40.61
 botocore==1.40.61
+typing_extensions==4.15.0
+packaging==25.0
